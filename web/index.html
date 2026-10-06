@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Kể Chuyện & Đố Vui Thiếu Nhi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="container header-content">
+            <div>
+                <h1 class="app-title">Hệ Thống Kể Chuyện & Đố Vui Thiếu Nhi</h1>
+                <p class="app-subtitle">Khám phá thế giới qua những câu chuyện ấm áp và câu đố vui</p>
+            </div>
+            <div class="header-badge">
+                <span class="badge-dot"></span>
+                <span>An Toàn Cho Trẻ Nhỏ</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-content">
+        <!-- Bảng điều khiển chọn chủ đề truyện -->
+        <section class="card config-card">
+            <h2 class="section-title">Chọn Chủ Đề Câu Chuyện</h2>
+            
+            <div class="form-group">
+                <label class="form-label">Chọn lứa tuổi của bé:</label>
+                <div class="age-selector">
+                    <button type="button" class="age-btn active" data-age="3-5">3 - 5 tuổi (Mầm non)</button>
+                    <button type="button" class="age-btn" data-age="6-8">6 - 8 tuổi (Tiểu học)</button>
+                    <button type="button" class="age-btn" data-age="9-12">9 - 12 tuổi (Khám phá)</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Chọn chủ đề gợi ý nhanh:</label>
+                <div class="topic-tags">
+                    <button type="button" class="topic-tag" data-topic="Tình bạn diệu kỳ trong rừng xanh và chia sẻ niềm vui">Tình bạn rừng xanh</button>
+                    <button type="button" class="topic-tag active" data-topic="Khám phá vũ trụ cùng bạn Gấu Nâu">Khám phá vũ trụ</button>
+                    <button type="button" class="topic-tag" data-topic="Vương quốc răng trắng và thói quen đánh răng mỗi ngày">Thói quen đánh răng</button>
+                    <button type="button" class="topic-tag" data-topic="Chú rùa nhỏ dũng cảm vượt qua nỗi sợ nước">Lòng dũng cảm</button>
+                    <button type="button" class="topic-tag" data-topic="Đám mây bồng bềnh và giấc ngủ êm đềm">Truyện ru ngủ</button>
+                    <button type="button" class="topic-tag" data-topic="Biệt đội nhí cứu hộ dòng suối và bảo vệ thiên nhiên">Bảo vệ môi trường</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="custom-topic" class="form-label">Hoặc nhập chủ đề tùy ý:</label>
+                <input type="text" id="custom-topic" class="input-text" placeholder="Nhập chủ đề câu chuyện bạn muốn kể cho bé...">
+            </div>
+
+            <button id="btn-generate" class="btn btn-primary">
+                <span>Tạo Câu Chuyện Cho Bé</span>
+            </button>
+
+            <!-- Trạng thái chờ tạo truyện -->
+            <div id="pipeline-status" class="pipeline-status hidden">
+                <div class="spinner"></div>
+                <div class="status-text-wrapper">
+                    <span id="status-title" class="status-title">Đang tạo câu chuyện cho bé...</span>
+                    <span id="status-desc" class="status-desc">Vui lòng chờ trong giây lát, câu chuyện và câu đố sắp hoàn thành.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Không gian hiển thị truyện và câu đố -->
+        <section id="story-section" class="card story-card hidden">
+            <div class="story-header">
+                <span class="category-badge">Câu Chuyện</span>
+                <h2 id="story-title" class="story-title">Tiêu đề truyện</h2>
+                <div id="character-tags" class="character-tags"></div>
+            </div>
+
+            <div id="story-body" class="story-body"></div>
+
+            <div class="lesson-box">
+                <span class="box-label">Bài Học Ý Nghĩa</span>
+                <p id="story-lesson" class="lesson-text"></p>
+            </div>
+
+            <div class="riddle-box">
+                <span class="box-label">Câu Đố Dành Cho Bé</span>
+                <p id="story-riddle" class="riddle-text"></p>
+                <p id="story-hint" class="hint-text hidden"></p>
+            </div>
+        </section>
+
+        <!-- Khung tương tác trả lời câu đố với Gia sư AI -->
+        <section id="chat-section" class="card chat-card hidden">
+            <h2 class="section-title">Cùng Bé Giải Đố & Trò Chuyện</h2>
+            <p class="chat-subtitle">Bé hãy nhập câu trả lời vào ô bên dưới để trò chuyện cùng Gia sư AI.</p>
+
+            <div id="chat-messages" class="chat-messages">
+                <div class="message message-bot">
+                    <div class="message-meta">Gia sư AI</div>
+                    <div class="message-content">Chào bé yêu! Bé đã nghe xong câu chuyện chưa? Hãy thử đoán câu trả lời cho câu đố xem nào!</div>
+                </div>
+            </div>
+
+            <form id="chat-form" class="chat-input-row">
+                <input type="text" id="user-answer-input" class="input-text" placeholder="Nhập câu trả lời của bé tại đây..." autocomplete="off">
+                <button type="submit" id="btn-submit-answer" class="btn btn-secondary">Gửi Câu Trả Lời</button>
+            </form>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="container footer-content">
+            <p>Hệ thống Kể Chuyện & Đố Vui Thiếu Nhi</p>
+            <p>Không gian học tập và giải trí trong sáng, an toàn cho trẻ nhỏ</p>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

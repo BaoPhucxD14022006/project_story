@@ -3,7 +3,7 @@ class Answer_Agent:
     def __init__(self, client, model, system_prompt=None, temperature=0.3, max_tokens=1024, max_memory_turns=6):
         self.client = client
         self.model = model
-        self.system_prompt = system_prompt or "Bạn là gia sư thân thiện, chuyên hướng dẫn và động viên trẻ em giải câu đố bằng giọng văn vui vẻ, khích lệ."
+        self.system_prompt = system_prompt
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.max_memory_turns = max_memory_turns
@@ -21,6 +21,21 @@ class Answer_Agent:
             "standard_answer": standard_answer
         }
         self.chat_history = []
+
+    def generate_standard_answer(self, prompt_user: str) -> str:
+        """Sinh đáp án chuẩn dựa trên truyện và câu đố."""
+        messages = []
+        if self.system_prompt:
+            messages.append({"role": "system", "content": self.system_prompt})
+        messages.append({"role": "user", "content": prompt_user})
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens
+        )
+        return response.choices[0].message.content
 
     def evaluate_answer(self, user_answer: str) -> str:
         """Đánh giá câu trả lời của bé dựa trên bối cảnh và các lần đoán trước đó."""
@@ -64,4 +79,4 @@ class Answer_Agent:
     def clear_memory(self):
         """Xóa trắng bộ nhớ của lượt chơi này."""
         self.current_context = None
-        self.chat_history = []
+        self.chat_history = []

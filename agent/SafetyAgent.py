@@ -6,34 +6,12 @@ class Safety_Agent:
     def __init__(self, client, model, system_prompt=None, temperature=0.0, max_tokens=512):
         self.client = client
         self.model = model
-        self.system_prompt = system_prompt or self._default_system_prompt()
+        self.system_prompt = system_prompt
         self.temperature = temperature
         self.max_tokens = max_tokens
         
         # Bộ nhớ lưu vết kiểm duyệt (Audit Log Memory)
         self.audit_log = []
-
-    def _default_system_prompt(self) -> str:
-        return """
-Bạn là Chuyên gia Kiểm duyệt An toàn Nội dung Thiếu nhi (Child Safety Content Moderator).
-NHIỆM VỤ: Phân tích nội dung được cung cấp và xác định xem có an toàn tuyệt đối cho trẻ em hay không.
-
-QUY TẮC CẤM (ZERO-TOLERANCE):
-1. Bạo lực, vũ khí, máu me, tự hại, đánh đấm.
-2. Nội dung người lớn, gợi dục, 18+, tình cảm không phù hợp lứa tuổi.
-3. Tên người thật (chính khách, người nổi tiếng, PII).
-4. Kinh dị, hù dọa, ma quỷ, gây ám ảnh sợ hãi.
-5. Ngôn từ thô tục, phân biệt đối xử, thù ghét, nhạy cảm chính trị.
-
-YÊU CẦU ĐẦU RA:
-BẮT BUỘC trả về duy nhất một chuỗi JSON chuẩn (không dùng markdown fence ```json), dạng:
-{
-  "is_safe": true/false,
-  "risk_level": "NONE" | "LOW" | "HIGH",
-  "violation_category": null hoặc "violence" | "adult" | "real_name" | "horror" | "hate",
-  "reason": "Giải thích ngắn gọn lý do vì sao an toàn hoặc vì sao vi phạm"
-}
-"""
 
     def check(self, content_to_check: str, context_type: str) -> dict:
         """
@@ -60,15 +38,26 @@ BẮT BUỘC trả về duy nhất một chuỗi JSON chuẩn (không dùng mark
         # Parse kết quả JSON an toàn
         try:
             # Loại bỏ markdown code fence nếu model vô tình sinh ra
-            cleaned_output = raw_output
+            cleaned_output = raw_output.strip()
             if cleaned_output.startswith("```"):
                 cleaned_output = cleaned_output.strip("`")
                 if cleaned_output.startswith("json"):
                     cleaned_output = cleaned_output[4:].strip()
+
+            if not cleaned_output.startswith("{") and "is_safe" in cleaned_output:
+                cleaned_output = "{" + cleaned_output
+            if not cleaned_output.endswith("}") and "is_safe" in cleaned_output:
+                cleaned_output = cleaned_output + "}"
+
+            start_idx = cleaned_output.find("{")
+            end_idx = cleaned_output.rfind("}")
+            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                cleaned_output = cleaned_output[start_idx:end_idx + 1]
+
             result = json.loads(cleaned_output)
         except Exception:
             # Fallback an toàn nếu parse JSON thất bại
-            is_safe = "is_safe\": true" in raw_output.lower() or "an toàn" in raw_output.lower()
+            is_safe = ("is_safe\": true" in raw_output.lower() or "is_safe: true" in raw_output.lower()) and "is_safe\": false" not in raw_output.lower()
             result = {
                 "is_safe": is_safe,
                 "risk_level": "NONE" if is_safe else "HIGH",
